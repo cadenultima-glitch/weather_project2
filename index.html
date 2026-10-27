@@ -1,43 +1,836 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weather in Sanford, FL</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
-</head>
-<body>
-  <div id="root"></div>
-  <script>
-    // Fetch from https://weather.gov
-    fetch('https://api.weather.gov/data/observations/current/fl/97104')
-      .then(response => response.json())
-      .then(data => {
-        // Render current conditions
-        const currentConditions = data.properties.forecast.properties.period[0].text;
-        document.getElementById('root').innerHTML = `
-          <h1>Current Weather in Sanford, FL</h1>
-          <p>${currentConditions}</p>
-        `;
-      });
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    // Fetch the periods
-    fetch('https://api.weather.gov/data/observations/current/fl/97104')
-      .then(response => response.json())
-      .then(data => {
-        // Render the 5-day forecast
-        const periods = data.properties.forecast.properties.period;
-        const forecastHtml = periods.map(period => `
-          <h2>${period.startTime}</h2>
-          <p>${period.text}</p>
-        `).join('');
-        document.getElementById('root').innerHTML += `
-          <h1>5-Day Forecast in Sanford, FL</h1>
-          ${forecastHtml}
-        `;
-      });
-  </script>
+<title>Sanford Weather Ultra</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,system-ui,sans-serif;
+}
+
+body{
+min-height:100vh;
+background:
+radial-gradient(circle at top,#17335b,#0b1020 55%,#05070d);
+color:white;
+overflow-x:hidden;
+}
+
+/* Background Glow */
+
+.bgGlow{
+position:fixed;
+width:700px;
+height:700px;
+background:#2dd4ff33;
+filter:blur(140px);
+top:-250px;
+left:-180px;
+pointer-events:none;
+z-index:-2;
+}
+
+.bgGlow2{
+position:fixed;
+width:600px;
+height:600px;
+background:#3b82f633;
+filter:blur(140px);
+right:-200px;
+bottom:-180px;
+pointer-events:none;
+z-index:-2;
+}
+
+/* Glass */
+
+.glass{
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(18px);
+border:1px solid rgba(255,255,255,.12);
+box-shadow:
+0 0 30px rgba(0,150,255,.15),
+inset 0 1px 1px rgba(255,255,255,.08);
+border-radius:24px;
+transition:.35s;
+}
+
+.glass:hover{
+transform:translateY(-3px);
+box-shadow:
+0 0 40px rgba(0,180,255,.35);
+}
+
+/* Neon */
+
+.neon{
+color:#74d9ff;
+text-shadow:
+0 0 8px #42bfff,
+0 0 18px #42bfff;
+}
+
+.small{
+font-size:.85rem;
+opacity:.75;
+}
+
+.value{
+font-size:1.5rem;
+font-weight:700;
+margin-top:4px;
+}
+
+.fade{
+animation:fade .5s ease;
+}
+
+@keyframes fade{
+from{
+opacity:0;
+transform:translateY(12px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.loader{
+width:45px;
+height:45px;
+border-radius:50%;
+border:5px solid #1e293b;
+border-top-color:#38bdf8;
+animation:spin .9s linear infinite;
+margin:auto;
+}
+
+@keyframes spin{
+to{
+transform:rotate(360deg);
+}
+}
+
+::-webkit-scrollbar{
+width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+background:#38bdf8;
+border-radius:99px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="bgGlow"></div>
+<div class="bgGlow2"></div>
+
+<div class="max-w-7xl mx-auto p-6">
+
+<!-- Header -->
+
+<div class="flex flex-wrap justify-between items-center gap-5 mb-8">
+
+<div>
+
+<h1 class="text-5xl font-black neon">
+Sanford Weather Ultra
+</h1>
+
+<p class="text-slate-300 mt-2">
+Live NOAA Weather • Sanford, Florida
+</p>
+
+</div>
+
+<div class="glass px-6 py-4">
+
+<div class="small">
+Last Updated
+</div>
+
+<div id="updatedTime" class="value">
+Loading...
+</div>
+
+</div>
+
+</div>
+
+<!-- Loading -->
+
+<div id="loading" class="glass p-10 text-center mb-8">
+
+<div class="loader"></div>
+
+<p class="mt-6 text-slate-300">
+Loading live NOAA weather...
+</p>
+
+</div>
+
+<!-- Main Dashboard -->
+
+<div id="dashboard" class="hidden fade">
+
+<div class="grid md:grid-cols-3 gap-6">
+
+<!-- Main Weather -->
+
+<div class="glass p-8 md:col-span-2">
+
+<div class="flex flex-wrap justify-between items-center">
+
+<div>
+
+<h2 id="condition"
+class="text-3xl font-bold">
+Loading...
+</h2>
+
+<p class="text-slate-400 mt-1">
+Current Conditions
+</p>
+
+</div>
+
+<div class="text-7xl"
+id="weatherIcon">
+☁️
+</div>
+
+</div>
+
+<div class="mt-8 flex flex-wrap gap-8 items-end">
+
+<div>
+
+<div id="temp"
+class="text-8xl font-black neon">
+--
+</div>
+
+<div class="text-slate-400">
+Temperature
+</div>
+
+</div>
+
+<div>
+
+<div class="text-xl text-slate-300">
+Feels Like
+</div>
+
+<div id="feelsLike"
+class="text-4xl font-bold">
+--
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Today's Summary -->
+
+<div class="glass p-8">
+
+<h3 class="text-xl font-bold mb-6">
+Today's Weather
+</h3>
+
+<div class="space-y-6">
+
+<div>
+
+<div class="small">
+High
+</div>
+
+<div id="highTemp"
+class="value">
+--
+</div>
+
+</div>
+
+<div>
+
+<div class="small">
+Low
+</div>
+
+<div id="lowTemp"
+class="value">
+--
+</div>
+
+</div>
+
+<div>
+
+<div class="small">
+Humidity
+</div>
+
+<div id="humidity"
+class="value">
+--
+</div>
+
+</div>
+
+<div>
+
+<div class="small">
+Wind
+</div>
+
+<div id="wind"
+class="value">
+--
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Stats -->
+
+<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+
+<div class="glass p-6">
+
+<div class="small">
+Wind Direction
+</div>
+
+<div id="windDir"
+class="value">
+--
+</div>
+
+</div>
+
+<div class="glass p-6">
+
+<div class="small">
+Sunrise
+</div>
+
+<div id="sunrise"
+class="value">
+--
+</div>
+
+</div>
+
+<div class="glass p-6">
+
+<div class="small">
+Sunset
+</div>
+
+<div id="sunset"
+class="value">
+--
+</div>
+
+</div>
+
+<div class="glass p-6">
+
+<div class="small">
+Forecast
+</div>
+
+<div id="forecastShort"
+class="value text-lg">
+Loading...
+</div>
+
+</div>
+
+</div>
+
+<!-- Alerts -->
+
+<div class="glass p-8 mt-8">
+
+<h2 class="text-2xl font-bold mb-5">
+Weather Alerts
+</h2>
+
+<div id="alerts">
+
+<p class="text-slate-400">
+Checking NOAA alerts...
+</p>
+
+</div>
+
+</div>
+
+<!-- Hourly Forecast -->
+
+<div class="glass p-8 mt-8">
+
+<h2 class="text-2xl font-bold mb-6">
+Hourly Forecast
+</h2>
+
+<div id="hourlyForecast"
+class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
+
+<!-- JavaScript inserts hourly cards -->
+
+</div>
+
+</div>
+
+<!-- 7 Day Forecast -->
+
+<div class="glass p-8 mt-8">
+
+<h2 class="text-2xl font-bold mb-6">
+7 Day Forecast
+</h2>
+
+<div id="forecastGrid"
+class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+<!-- JavaScript inserts forecast cards -->
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+const LAT = 28.8029;
+const LON = -81.2695;
+
+// Part 2 will continue here...
+const headers = {
+"Accept":"application/geo+json"
+};
+
+let forecastData;
+let hourlyData;
+
+async function loadWeather(){
+
+try{
+
+const point = await fetch(
+`https://api.weather.gov/points/${LAT},${LON}`,
+{headers}
+);
+
+const pointData = await point.json();
+
+const forecastURL =
+pointData.properties.forecast;
+
+const hourlyURL =
+pointData.properties.forecastHourly;
+
+const zone =
+pointData.properties.forecastZone.split("/").pop();
+
+const forecastResponse =
+await fetch(forecastURL,{headers});
+
+forecastData =
+await forecastResponse.json();
+
+const hourlyResponse =
+await fetch(hourlyURL,{headers});
+
+hourlyData =
+await hourlyResponse.json();
+
+const alertsResponse =
+await fetch(
+`https://api.weather.gov/alerts/active?zone=${zone}`,
+{headers}
+);
+
+const alerts =
+await alertsResponse.json();
+
+updateCurrent();
+updateHourly();
+updateForecast();
+updateAlerts(alerts);
+
+document.getElementById("loading")
+.style.display="none";
+
+document.getElementById("dashboard")
+.classList.remove("hidden");
+
+document.getElementById("updatedTime")
+.textContent=
+new Date().toLocaleTimeString([],{
+hour:"numeric",
+minute:"2-digit"
+});
+
+}catch(err){
+
+console.error(err);
+
+document.getElementById("loading").innerHTML=`
+<h2 class="text-2xl font-bold text-red-400">
+Unable to load weather
+</h2>
+
+<p class="mt-3 text-slate-400">
+NOAA may be temporarily unavailable.
+</p>
+`;
+
+}
+
+}
+
+function updateCurrent(){
+
+const now =
+hourlyData.properties.periods[0];
+
+const today =
+forecastData.properties.periods[0];
+
+document.getElementById("temp")
+.textContent=`${now.temperature}°`;
+
+document.getElementById("feelsLike")
+.textContent=`${now.temperature}°`;
+
+document.getElementById("condition")
+.textContent=
+now.shortForecast;
+
+document.getElementById("forecastShort")
+.textContent=
+today.shortForecast;
+
+document.getElementById("highTemp")
+.textContent=`${today.temperature}°`;
+
+if(forecastData.properties.periods[1]){
+
+document.getElementById("lowTemp")
+.textContent=
+`${forecastData.properties.periods[1].temperature}°`;
+
+}
+
+document.getElementById("wind")
+.textContent=
+now.windSpeed;
+
+document.getElementById("windDir")
+.textContent=
+now.windDirection;
+
+const icon =
+today.shortForecast.toLowerCase();
+
+let emoji="☀️";
+
+if(icon.includes("cloud")) emoji="☁️";
+if(icon.includes("rain")) emoji="🌧️";
+if(icon.includes("storm")) emoji="⛈️";
+if(icon.includes("snow")) emoji="❄️";
+if(icon.includes("fog")) emoji="🌫️";
+if(icon.includes("clear")) emoji="☀️";
+
+document.getElementById("weatherIcon")
+.textContent=emoji;
+
+/* NOAA forecast doesn't include humidity,
+sunrise, or sunset directly, so placeholders
+until Part 3 adds observation data. */
+
+document.getElementById("humidity")
+.textContent="--";
+
+document.getElementById("sunrise")
+.textContent="--";
+
+document.getElementById("sunset")
+.textContent="--";
+
+}
+
+setInterval(loadWeather,300000);
+function updateHourly(){
+
+const container =
+document.getElementById("hourlyForecast");
+
+container.innerHTML="";
+
+hourlyData.properties.periods
+.slice(0,12)
+.forEach(hour=>{
+
+container.innerHTML+=`
+
+<div class="glass p-4 text-center">
+
+<div class="font-bold">
+${new Date(hour.startTime).toLocaleTimeString([],{
+hour:"numeric"
+})}
+</div>
+
+<div class="text-4xl my-3">
+${getEmoji(hour.shortForecast)}
+</div>
+
+<div class="text-2xl font-bold neon">
+${hour.temperature}°
+</div>
+
+<div class="text-xs text-slate-300 mt-2">
+${hour.shortForecast}
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+function updateForecast(){
+
+const grid =
+document.getElementById("forecastGrid");
+
+grid.innerHTML="";
+
+forecastData.properties.periods
+.filter(p=>p.isDaytime)
+.slice(0,7)
+.forEach(day=>{
+
+grid.innerHTML+=`
+
+<div class="glass p-6">
+
+<div class="font-bold text-xl">
+${day.name}
+</div>
+
+<div class="text-5xl text-center my-5">
+${getEmoji(day.shortForecast)}
+</div>
+
+<div class="text-3xl neon font-bold">
+${day.temperature}°
+</div>
+
+<div class="text-sm text-slate-300 mt-3">
+${day.shortForecast}
+</div>
+
+<div class="mt-4 text-xs text-slate-400">
+Wind: ${day.windSpeed}
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+function updateAlerts(alertData){
+
+const box =
+document.getElementById("alerts");
+
+box.innerHTML="";
+
+if(!alertData.features.length){
+
+box.innerHTML=`
+<div class="text-green-400 font-semibold">
+✅ No active weather alerts.
+</div>
+`;
+
+return;
+
+}
+
+alertData.features.forEach(alert=>{
+
+box.innerHTML+=`
+
+<div class="glass p-5 mb-4 border border-red-500">
+
+<div class="text-red-400 text-xl font-bold">
+${alert.properties.event}
+</div>
+
+<div class="mt-2 text-slate-300">
+${alert.properties.headline}
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+function getEmoji(text){
+
+text=text.toLowerCase();
+
+if(text.includes("sun")) return "☀️";
+
+if(text.includes("clear")) return "☀️";
+
+if(text.includes("cloud")) return "☁️";
+
+if(text.includes("partly")) return "⛅";
+
+if(text.includes("rain")) return "🌧️";
+
+if(text.includes("shower")) return "🌦️";
+
+if(text.includes("storm")) return "⛈️";
+
+if(text.includes("thunder")) return "⛈️";
+
+if(text.includes("snow")) return "❄️";
+
+if(text.includes("fog")) return "🌫️";
+
+if(text.includes("wind")) return "💨";
+
+return "🌤️";
+
+}
+
+/* Optional: load current observation station
+   NOAA provides nearby observation stations
+   through the /points endpoint, then the
+   latest observation can supply humidity and
+   other live measurements. :chatgpt-content-reference{index="0"} */
+window.onload=loadWeather;async function loadStationData(){
+
+try{
+
+const point=await fetch(
+`https://api.weather.gov/points/${LAT},${LON}`,
+{headers}
+);
+
+const pointData=await point.json();
+
+const stations=await fetch(
+pointData.properties.observationStations,
+{headers}
+);
+
+const stationList=await stations.json();
+
+if(!stationList.observationStations.length)return;
+
+const latest=await fetch(
+stationList.observationStations[0]+"/observations/latest",
+{headers}
+);
+
+const obs=await latest.json();
+
+const p=obs.properties;
+
+if(p.relativeHumidity && p.relativeHumidity.value!=null){
+
+document.getElementById("humidity").textContent=
+`${Math.round(p.relativeHumidity.value)}%`;
+
+}
+
+}catch(e){
+
+console.log("Observation data unavailable.");
+
+}
+
+}
+
+/* Sunrise / Sunset (simple calculation placeholder) */
+
+const now=new Date();
+
+document.getElementById("sunrise").textContent=
+"6:30 AM";
+
+document.getElementById("sunset").textContent=
+"6:48 PM";
+
+/* Refresh Button */
+
+const refresh=document.createElement("button");
+
+refresh.className=
+"fixed bottom-6 right-6 glass px-6 py-4 font-bold hover:scale-105 transition";
+
+refresh.innerHTML="🔄 Refresh";
+
+refresh.onclick=()=>{
+
+document.getElementById("dashboard")
+.classList.add("hidden");
+
+document.getElementById("loading")
+.style.display="block";
+
+loadWeather();
+loadStationData();
+
+};
+
+document.body.appendChild(refresh);
+
+/* Load Everything */
+
+loadWeather();
+
+loadStationData();
+</script>
+
 </body>
 </html>
