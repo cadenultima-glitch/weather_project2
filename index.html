@@ -966,3 +966,195 @@ class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-bold">
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</script>
+/* Temperature Graph */
+
+function makeChart(){
+
+const ctx=document.getElementById("tempChart");
+
+if(!ctx)return;
+
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+
+labels:hourlyData.properties.periods
+.slice(0,24)
+.map(x=>new Date(x.startTime)
+.toLocaleTimeString([],{
+hour:"numeric"
+})),
+
+datasets:[{
+
+label:"Temperature",
+
+data:hourlyData.properties.periods
+.slice(0,24)
+.map(x=>x.temperature),
+
+borderColor:"#38bdf8",
+
+backgroundColor:"rgba(56,189,248,.15)",
+
+fill:true,
+
+tension:.45
+
+}]
+
+},
+
+options:{
+
+plugins:{
+legend:{
+labels:{
+color:"white"
+}
+}
+},
+
+scales:{
+
+x:{
+ticks:{
+color:"white"
+}
+},
+
+y:{
+ticks:{
+color:"white"
+}
+}
+
+}
+
+}
+
+});
+
+}
+
+/* Call after weather loads */
+
+setTimeout(makeChart,1000);
+
+/* Live Theme */
+
+function toggleTheme(){
+
+document.body.classList.toggle("invert");
+
+}
+
+/* Stars */
+
+const stars=document.getElementById("stars");
+
+for(let i=0;i<120;i++){
+
+const s=document.createElement("div");
+
+s.style.position="fixed";
+
+s.style.width="2px";
+
+s.style.height="2px";
+
+s.style.background="white";
+
+s.style.left=Math.random()*100+"vw";
+
+s.style.top=Math.random()*100+"vh";
+
+s.style.opacity=Math.random();
+
+s.style.pointerEvents="none";
+
+s.style.boxShadow="0 0 8px white";
+
+stars.appendChild(s);
+
+}
+
+/* Rain */
+
+const rain=document.getElementById("rain");
+
+for(let i=0;i<140;i++){
+
+const d=document.createElement("div");
+
+d.style.position="fixed";
+
+d.style.width="2px";
+
+d.style.height="18px";
+
+d.style.background="rgba(120,220,255,.55)";
+
+d.style.left=Math.random()*100+"vw";
+
+d.style.top=Math.random()*-100+"vh";
+
+d.style.animation=`fall ${1+Math.random()*2}s linear infinite`;
+
+d.style.animationDelay=Math.random()*2+"s";
+
+rain.appendChild(d);
+
+}
+
+const style=document.createElement("style");
+
+style.innerHTML=`
+
+@keyframes fall{
+
+0%{
+
+transform:translateY(-100px);
+
+opacity:0;
+
+}
+
+20%{
+
+opacity:1;
+
+}
+
+100%{
+
+transform:translateY(120vh);
+
+opacity:0;
+
+}
+
+}
+
+.glass{
+
+transition:.35s;
+
+}
+
+.glass:hover{
+
+transform:translateY(-6px) scale(1.02);
+
+box-shadow:0 0 35px #38bdf8;
+
+}
+
+`;
+
+document.head.appendChild(style);
+   </script>
