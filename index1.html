@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather in Sanford, FL</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    // Fetch from https://weather.gov
+    fetch('https://api.weather.gov/data/observations/current/fl/97104')
+      .then(response => response.json())
+      .then(data => {
+        // Render current conditions
+        const currentConditions = data.properties.forecast.properties.period[0].text;
+        document.getElementById('root').innerHTML = `
+          <h1>Current Weather in Sanford, FL</h1>
+          <p>${currentConditions}</p>
+        `;
+      });
+
+    // Fetch the periods
+    fetch('https://api.weather.gov/data/observations/current/fl/97104')
+      .then(response => response.json())
+      .then(data => {
+        // Render the 5-day forecast
+        const periods = data.properties.forecast.properties.period;
+        const forecastHtml = periods.map(period => `
+          <h2>${period.startTime}</h2>
+          <p>${period.text}</p>
+        `).join('');
+        document.getElementById('root').innerHTML += `
+          <h1>5-Day Forecast in Sanford, FL</h1>
+          ${forecastHtml}
+        `;
+      });
+  </script>
+</body>
+</html>
+```
