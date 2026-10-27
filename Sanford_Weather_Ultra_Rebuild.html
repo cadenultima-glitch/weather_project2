@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sanford Weather Ultra</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#08111d;color:#fff}
+.card{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border-radius:18px;padding:18px}
+.grid{display:grid;gap:16px}
+</style>
+</head>
+<body class="p-6">
+<h1 class="text-4xl font-bold">Sanford Weather Ultra</h1>
+<p>Starter rebuild. This is a clean base ready to expand.</p>
+
+<div class="grid md:grid-cols-2 mt-6">
+<div class="card">
+<h2 class="text-2xl">Current Weather</h2>
+<div id="current">Loading...</div>
+</div>
+<div class="card">
+<h2 class="text-2xl">Forecast</h2>
+<div id="forecast">Loading...</div>
+</div>
+</div>
+
+<script>
+const LAT=28.8029,LON=-81.2695;
+(async()=>{
+ try{
+  const p=await fetch(`https://api.weather.gov/points/${LAT},${LON}`,{headers:{Accept:"application/geo+json"}});
+  const j=await p.json();
+  const f=await fetch(j.properties.forecast,{headers:{Accept:"application/geo+json"}});
+  const fj=await f.json();
+  document.getElementById("current").textContent=fj.properties.periods[0].detailedForecast;
+  document.getElementById("forecast").innerHTML=fj.properties.periods.slice(0,5).map(x=>`<p><b>${x.name}</b>: ${x.temperature}° ${x.shortForecast}</p>`).join("");
+ }catch(e){
+  document.getElementById("current").textContent="Unable to load NOAA data.";
+ }
+})();
+</script>
+</body>
+</html>
