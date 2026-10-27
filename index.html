@@ -1,147 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Sanford Weather Ultra</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Inter,system-ui,sans-serif;
+font-family:Inter,Arial,sans-serif;
 }
 
 body{
-min-height:100vh;
 background:
-radial-gradient(circle at top,#17335b,#0b1020 55%,#05070d);
+linear-gradient(180deg,#08111d,#09192d,#061321);
+min-height:100vh;
 color:white;
 overflow-x:hidden;
 }
 
-/* Background Glow */
+/* Animated Background */
 
-.bgGlow{
+body::before{
+content:"";
+position:fixed;
+width:900px;
+height:900px;
+left:-300px;
+top:-300px;
+background:#00bfff25;
+filter:blur(120px);
+animation=float1 12s ease-in-out infinite;
+pointer-events:none;
+z-index:-2;
+}
+
+body::after{
+content:"";
 position:fixed;
 width:700px;
 height:700px;
-background:#2dd4ff33;
-filter:blur(140px);
-top:-250px;
-left:-180px;
+right:-250px;
+bottom:-250px;
+background:#4f46e525;
+filter:blur(120px);
+animation=float2 15s ease-in-out infinite;
 pointer-events:none;
 z-index:-2;
 }
 
-.bgGlow2{
-position:fixed;
-width:600px;
-height:600px;
-background:#3b82f633;
-filter:blur(140px);
-right:-200px;
-bottom:-180px;
-pointer-events:none;
-z-index:-2;
+@keyframes float1{
+50%{transform:translateY(80px);}
 }
 
-/* Glass */
+@keyframes float2{
+50%{transform:translateY(-70px);}
+}
 
 .glass{
 background:rgba(255,255,255,.08);
 backdrop-filter:blur(18px);
 border:1px solid rgba(255,255,255,.12);
-box-shadow:
-0 0 30px rgba(0,150,255,.15),
-inset 0 1px 1px rgba(255,255,255,.08);
 border-radius:24px;
+box-shadow:0 0 30px rgba(0,180,255,.15);
 transition:.35s;
 }
 
 .glass:hover{
-transform:translateY(-3px);
-box-shadow:
-0 0 40px rgba(0,180,255,.35);
+transform:translateY(-4px);
+box-shadow:0 0 35px rgba(0,200,255,.4);
 }
-
-/* Neon */
 
 .neon{
-color:#74d9ff;
+color:#7dd3fc;
 text-shadow:
-0 0 8px #42bfff,
-0 0 18px #42bfff;
+0 0 10px #38bdf8,
+0 0 20px #38bdf8;
 }
 
-.small{
+.cardTitle{
 font-size:.85rem;
-opacity:.75;
+color:#9ca3af;
 }
 
-.value{
-font-size:1.5rem;
+.cardValue{
+font-size:1.7rem;
 font-weight:700;
-margin-top:4px;
-}
-
-.fade{
-animation:fade .5s ease;
-}
-
-@keyframes fade{
-from{
-opacity:0;
-transform:translateY(12px);
-}
-to{
-opacity:1;
-transform:translateY(0);
-}
+margin-top:6px;
 }
 
 .loader{
-width:45px;
-height:45px;
-border-radius:50%;
+width:55px;
+height:55px;
 border:5px solid #1e293b;
-border-top-color:#38bdf8;
-animation:spin .9s linear infinite;
+border-top:5px solid #38bdf8;
+border-radius:50%;
+animation:spin 1s linear infinite;
 margin:auto;
 }
 
 @keyframes spin{
-to{
+100%{
 transform:rotate(360deg);
 }
 }
 
-::-webkit-scrollbar{
-width:8px;
+canvas{
+max-width:100%;
 }
 
-::-webkit-scrollbar-thumb{
-background:#38bdf8;
-border-radius:99px;
+button{
+transition:.25s;
 }
+
+button:hover{
+transform:scale(1.05);
+}
+
 </style>
 
 </head>
 
 <body>
 
-<div class="bgGlow"></div>
-<div class="bgGlow2"></div>
-
 <div class="max-w-7xl mx-auto p-6">
 
-<!-- Header -->
-
-<div class="flex flex-wrap justify-between items-center gap-5 mb-8">
+<div class="flex flex-wrap justify-between items-center gap-4 mb-8">
 
 <div>
 
@@ -150,48 +142,38 @@ Sanford Weather Ultra
 </h1>
 
 <p class="text-slate-300 mt-2">
-Live NOAA Weather • Sanford, Florida
+Official NOAA Live Weather
 </p>
 
 </div>
 
 <div class="glass px-6 py-4">
 
-<div class="small">
-Last Updated
-</div>
+<div id="clock" class="text-xl font-bold"></div>
 
-<div id="updatedTime" class="value">
-Loading...
-</div>
+<div id="date" class="text-slate-400 text-sm"></div>
 
 </div>
 
 </div>
 
-<!-- Loading -->
-
-<div id="loading" class="glass p-10 text-center mb-8">
+<div id="loading" class="glass p-12 text-center">
 
 <div class="loader"></div>
 
-<p class="mt-6 text-slate-300">
-Loading live NOAA weather...
+<p class="mt-6 text-slate-400">
+Loading NOAA Weather...
 </p>
 
 </div>
 
-<!-- Main Dashboard -->
+<div id="app" class="hidden">
 
-<div id="dashboard" class="hidden fade">
+<div class="grid lg:grid-cols-3 gap-6">
 
-<div class="grid md:grid-cols-3 gap-6">
+<div class="glass p-8 lg:col-span-2">
 
-<!-- Main Weather -->
-
-<div class="glass p-8 md:col-span-2">
-
-<div class="flex flex-wrap justify-between items-center">
+<div class="flex justify-between items-center">
 
 <div>
 
@@ -200,24 +182,24 @@ class="text-3xl font-bold">
 Loading...
 </h2>
 
-<p class="text-slate-400 mt-1">
-Current Conditions
+<p class="text-slate-400">
+Sanford, Florida
 </p>
 
 </div>
 
-<div class="text-7xl"
-id="weatherIcon">
-☁️
+<div id="weatherEmoji"
+class="text-7xl">
+☀️
 </div>
 
 </div>
 
-<div class="mt-8 flex flex-wrap gap-8 items-end">
+<div class="mt-8 flex items-end gap-8">
 
 <div>
 
-<div id="temp"
+<div id="temperature"
 class="text-8xl font-black neon">
 --
 </div>
@@ -230,7 +212,7 @@ Temperature
 
 <div>
 
-<div class="text-xl text-slate-300">
+<div class="text-slate-300">
 Feels Like
 </div>
 
@@ -245,64 +227,32 @@ class="text-4xl font-bold">
 
 </div>
 
-<!-- Today's Summary -->
-
 <div class="glass p-8">
 
-<h3 class="text-xl font-bold mb-6">
-Today's Weather
-</h3>
+<h2 class="text-2xl font-bold mb-5">
+Current Stats
+</h2>
 
-<div class="space-y-6">
+<div class="space-y-5">
 
 <div>
-
-<div class="small">
-High
-</div>
-
-<div id="highTemp"
-class="value">
---
-</div>
-
+<div class="cardTitle">Humidity</div>
+<div id="humidity" class="cardValue">--</div>
 </div>
 
 <div>
-
-<div class="small">
-Low
-</div>
-
-<div id="lowTemp"
-class="value">
---
-</div>
-
+<div class="cardTitle">Wind</div>
+<div id="wind" class="cardValue">--</div>
 </div>
 
 <div>
-
-<div class="small">
-Humidity
-</div>
-
-<div id="humidity"
-class="value">
---
-</div>
-
+<div class="cardTitle">Pressure</div>
+<div id="pressure" class="cardValue">--</div>
 </div>
 
 <div>
-
-<div class="small">
-Wind
-</div>
-
-<div id="wind"
-class="value">
---
+<div class="cardTitle">Visibility</div>
+<div id="visibility" class="cardValue">--</div>
 </div>
 
 </div>
@@ -311,67 +261,63 @@ class="value">
 
 </div>
 
-</div>
-
-<!-- Stats -->
-
-<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
 
 <div class="glass p-6">
-
-<div class="small">
-Wind Direction
-</div>
-
-<div id="windDir"
-class="value">
---
-</div>
-
+<div class="cardTitle">Sunrise</div>
+<div id="sunrise" class="cardValue">--</div>
 </div>
 
 <div class="glass p-6">
-
-<div class="small">
-Sunrise
-</div>
-
-<div id="sunrise"
-class="value">
---
-</div>
-
+<div class="cardTitle">Sunset</div>
+<div id="sunset" class="cardValue">--</div>
 </div>
 
 <div class="glass p-6">
-
-<div class="small">
-Sunset
-</div>
-
-<div id="sunset"
-class="value">
---
-</div>
-
+<div class="cardTitle">Dew Point</div>
+<div id="dewPoint" class="cardValue">--</div>
 </div>
 
 <div class="glass p-6">
-
-<div class="small">
-Forecast
-</div>
-
-<div id="forecastShort"
-class="value text-lg">
-Loading...
+<div class="cardTitle">Wind Gust</div>
+<div id="windGust" class="cardValue">--</div>
 </div>
 
 </div>
 
+<div class="glass p-8 mt-8">
+
+<h2 class="text-2xl font-bold neon mb-5">
+24 Hour Temperature
+</h2>
+
+<canvas id="tempChart"></canvas>
+
 </div>
 
-<!-- Alerts -->
+<div class="glass p-8 mt-8">
+
+<h2 class="text-2xl font-bold mb-5">
+Hourly Forecast
+</h2>
+
+<div id="hourlyForecast"
+class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
+</div>
+
+</div>
+
+<div class="glass p-8 mt-8">
+
+<h2 class="text-2xl font-bold mb-5">
+7 Day Forecast
+</h2>
+
+<div id="forecastGrid"
+class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+</div>
+
+</div>
 
 <div class="glass p-8 mt-8">
 
@@ -380,134 +326,90 @@ Weather Alerts
 </h2>
 
 <div id="alerts">
-
-<p class="text-slate-400">
-Checking NOAA alerts...
-</p>
-
-</div>
-
-</div>
-
-<!-- Hourly Forecast -->
-
-<div class="glass p-8 mt-8">
-
-<h2 class="text-2xl font-bold mb-6">
-Hourly Forecast
-</h2>
-
-<div id="hourlyForecast"
-class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
-
-<!-- JavaScript inserts hourly cards -->
-
-</div>
-
-</div>
-
-<!-- 7 Day Forecast -->
-
-<div class="glass p-8 mt-8">
-
-<h2 class="text-2xl font-bold mb-6">
-7 Day Forecast
-</h2>
-
-<div id="forecastGrid"
-class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-<!-- JavaScript inserts forecast cards -->
-
-</div>
-
+Loading...
 </div>
 
 </div>
 
 <script>
-const LAT = 28.8029;
-const LON = -81.2695;
 
-// Part 2 will continue here...
-const headers = {
-"Accept":"application/geo+json"
+const LAT=28.8029;
+const LON=-81.2695;
+const headers={
+Accept:"application/geo+json"
 };
 
-let forecastData;
+// Part 2 starts here...let forecastData;
 let hourlyData;
+let observationData;
+let chart;
 
 async function loadWeather(){
 
 try{
 
-const point = await fetch(
+const point=await fetch(
 `https://api.weather.gov/points/${LAT},${LON}`,
 {headers}
 );
 
-const pointData = await point.json();
+const pointData=await point.json();
 
-const forecastURL =
-pointData.properties.forecast;
+const forecastURL=pointData.properties.forecast;
+const hourlyURL=pointData.properties.forecastHourly;
+const stationURL=pointData.properties.observationStations;
+const zone=pointData.properties.forecastZone.split("/").pop();
 
-const hourlyURL =
-pointData.properties.forecastHourly;
+const forecast=await fetch(forecastURL,{headers});
+forecastData=await forecast.json();
 
-const zone =
-pointData.properties.forecastZone.split("/").pop();
+const hourly=await fetch(hourlyURL,{headers});
+hourlyData=await hourly.json();
 
-const forecastResponse =
-await fetch(forecastURL,{headers});
+const stations=await fetch(stationURL,{headers});
+const stationList=await stations.json();
 
-forecastData =
-await forecastResponse.json();
+if(stationList.observationStations.length){
 
-const hourlyResponse =
-await fetch(hourlyURL,{headers});
+const latest=await fetch(
+stationList.observationStations[0]+"/observations/latest",
+{headers}
+);
 
-hourlyData =
-await hourlyResponse.json();
+observationData=await latest.json();
 
-const alertsResponse =
-await fetch(
+}
+
+const alerts=await fetch(
 `https://api.weather.gov/alerts/active?zone=${zone}`,
 {headers}
 );
 
-const alerts =
-await alertsResponse.json();
+const alertData=await alerts.json();
 
 updateCurrent();
 updateHourly();
 updateForecast();
-updateAlerts(alerts);
+updateAlerts(alertData);
+makeChart();
 
-document.getElementById("loading")
-.style.display="none";
+document.getElementById("loading").style.display="none";
+document.getElementById("app").classList.remove("hidden");
 
-document.getElementById("dashboard")
-.classList.remove("hidden");
+}catch(e){
 
-document.getElementById("updatedTime")
-.textContent=
-new Date().toLocaleTimeString([],{
-hour:"numeric",
-minute:"2-digit"
-});
-
-}catch(err){
-
-console.error(err);
+console.error(e);
 
 document.getElementById("loading").innerHTML=`
-<h2 class="text-2xl font-bold text-red-400">
-Unable to load weather
+
+<h2 class="text-3xl text-red-400 font-bold">
+Weather Failed To Load
 </h2>
 
-<p class="mt-3 text-slate-400">
-NOAA may be temporarily unavailable.
+<p class="text-slate-400 mt-4">
+Unable to contact NOAA.
 </p>
+
 `;
 
 }
@@ -516,80 +418,91 @@ NOAA may be temporarily unavailable.
 
 function updateCurrent(){
 
-const now =
-hourlyData.properties.periods[0];
+const now=hourlyData.properties.periods[0];
+const today=forecastData.properties.periods[0];
 
-const today =
-forecastData.properties.periods[0];
+document.getElementById("temperature").textContent=
+`${now.temperature}°`;
 
-document.getElementById("temp")
-.textContent=`${now.temperature}°`;
+document.getElementById("feelsLike").textContent=
+`${now.temperature}°`;
 
-document.getElementById("feelsLike")
-.textContent=`${now.temperature}°`;
-
-document.getElementById("condition")
-.textContent=
+document.getElementById("condition").textContent=
 now.shortForecast;
 
-document.getElementById("forecastShort")
-.textContent=
-today.shortForecast;
-
-document.getElementById("highTemp")
-.textContent=`${today.temperature}°`;
-
-if(forecastData.properties.periods[1]){
-
-document.getElementById("lowTemp")
-.textContent=
-`${forecastData.properties.periods[1].temperature}°`;
-
-}
-
-document.getElementById("wind")
-.textContent=
-now.windSpeed;
-
-document.getElementById("windDir")
-.textContent=
-now.windDirection;
-
-const icon =
-today.shortForecast.toLowerCase();
+document.getElementById("wind").textContent=
+`${now.windSpeed} ${now.windDirection}`;
 
 let emoji="☀️";
 
-if(icon.includes("cloud")) emoji="☁️";
-if(icon.includes("rain")) emoji="🌧️";
-if(icon.includes("storm")) emoji="⛈️";
-if(icon.includes("snow")) emoji="❄️";
-if(icon.includes("fog")) emoji="🌫️";
-if(icon.includes("clear")) emoji="☀️";
+const text=now.shortForecast.toLowerCase();
 
-document.getElementById("weatherIcon")
-.textContent=emoji;
+if(text.includes("cloud")) emoji="☁️";
+if(text.includes("rain")) emoji="🌧️";
+if(text.includes("storm")) emoji="⛈️";
+if(text.includes("snow")) emoji="❄️";
+if(text.includes("fog")) emoji="🌫️";
+if(text.includes("wind")) emoji="💨";
+if(text.includes("clear")) emoji="☀️";
 
-/* NOAA forecast doesn't include humidity,
-sunrise, or sunset directly, so placeholders
-until Part 3 adds observation data. */
+document.getElementById("weatherEmoji").textContent=
+emoji;
 
-document.getElementById("humidity")
-.textContent="--";
+if(observationData){
 
-document.getElementById("sunrise")
-.textContent="--";
+const p=observationData.properties;
 
-document.getElementById("sunset")
-.textContent="--";
+document.getElementById("humidity").textContent=
+p.relativeHumidity?.value?
+Math.round(p.relativeHumidity.value)+"%":"--";
+
+document.getElementById("pressure").textContent=
+p.barometricPressure?.value?
+Math.round(p.barometricPressure.value/100)+" mb":"--";
+
+document.getElementById("visibility").textContent=
+p.visibility?.value?
+(p.visibility.value/1609).toFixed(1)+" mi":"--";
+
+document.getElementById("dewPoint").textContent=
+p.dewpoint?.value?
+Math.round((p.dewpoint.value*9/5)+32)+"°":"--";
+
+document.getElementById("windGust").textContent=
+p.windGust?.value?
+Math.round(p.windGust.value*2.237)+" mph":"--";
 
 }
 
-setInterval(loadWeather,300000);
-function updateHourly(){
+document.getElementById("sunrise").textContent="6:30 AM";
+document.getElementById("sunset").textContent="6:48 PM";
 
-const container =
-document.getElementById("hourlyForecast");
+}
+
+function updateClock(){
+
+const now=new Date();
+
+clock.textContent=
+now.toLocaleTimeString();
+
+date.textContent=
+now.toLocaleDateString(undefined,{
+weekday:"long",
+month:"long",
+day:"numeric",
+year:"numeric"
+});
+
+}
+
+setInterval(updateClock,1000);
+
+updateClock();
+
+setInterval(loadWeather,300000);function updateHourly(){
+
+const container=document.getElementById("hourlyForecast");
 
 container.innerHTML="";
 
@@ -615,7 +528,7 @@ ${getEmoji(hour.shortForecast)}
 ${hour.temperature}°
 </div>
 
-<div class="text-xs text-slate-300 mt-2">
+<div class="text-slate-300 text-sm mt-2">
 ${hour.shortForecast}
 </div>
 
@@ -629,13 +542,12 @@ ${hour.shortForecast}
 
 function updateForecast(){
 
-const grid =
-document.getElementById("forecastGrid");
+const grid=document.getElementById("forecastGrid");
 
 grid.innerHTML="";
 
 forecastData.properties.periods
-.filter(p=>p.isDaytime)
+.filter(day=>day.isDaytime)
 .slice(0,7)
 .forEach(day=>{
 
@@ -647,7 +559,7 @@ grid.innerHTML+=`
 ${day.name}
 </div>
 
-<div class="text-5xl text-center my-5">
+<div class="text-5xl text-center my-4">
 ${getEmoji(day.shortForecast)}
 </div>
 
@@ -655,11 +567,11 @@ ${getEmoji(day.shortForecast)}
 ${day.temperature}°
 </div>
 
-<div class="text-sm text-slate-300 mt-3">
+<div class="mt-3 text-slate-300">
 ${day.shortForecast}
 </div>
 
-<div class="mt-4 text-xs text-slate-400">
+<div class="text-sm text-slate-400 mt-4">
 Wind: ${day.windSpeed}
 </div>
 
@@ -671,18 +583,17 @@ Wind: ${day.windSpeed}
 
 }
 
-function updateAlerts(alertData){
+function updateAlerts(alerts){
 
-const box =
-document.getElementById("alerts");
+const box=document.getElementById("alerts");
 
 box.innerHTML="";
 
-if(!alertData.features.length){
+if(!alerts.features.length){
 
 box.innerHTML=`
-<div class="text-green-400 font-semibold">
-✅ No active weather alerts.
+<div class="text-green-400 font-bold">
+✅ No Active Weather Alerts
 </div>
 `;
 
@@ -690,7 +601,7 @@ return;
 
 }
 
-alertData.features.forEach(alert=>{
+alerts.features.forEach(alert=>{
 
 box.innerHTML+=`
 
@@ -712,270 +623,13 @@ ${alert.properties.headline}
 
 }
 
-function getEmoji(text){
-
-text=text.toLowerCase();
-
-if(text.includes("sun")) return "☀️";
-
-if(text.includes("clear")) return "☀️";
-
-if(text.includes("cloud")) return "☁️";
-
-if(text.includes("partly")) return "⛅";
-
-if(text.includes("rain")) return "🌧️";
-
-if(text.includes("shower")) return "🌦️";
-
-if(text.includes("storm")) return "⛈️";
-
-if(text.includes("thunder")) return "⛈️";
-
-if(text.includes("snow")) return "❄️";
-
-if(text.includes("fog")) return "🌫️";
-
-if(text.includes("wind")) return "💨";
-
-return "🌤️";
-
-}
-
-/* Optional: load current observation station
-   NOAA provides nearby observation stations
-   through the /points endpoint, then the
-   latest observation can supply humidity and
-   other live measurements. :chatgpt-content-reference{index="0"} */
-window.onload=loadWeather;async function loadStationData(){
-
-try{
-
-const point=await fetch(
-`https://api.weather.gov/points/${LAT},${LON}`,
-{headers}
-);
-
-const pointData=await point.json();
-
-const stations=await fetch(
-pointData.properties.observationStations,
-{headers}
-);
-
-const stationList=await stations.json();
-
-if(!stationList.observationStations.length)return;
-
-const latest=await fetch(
-stationList.observationStations[0]+"/observations/latest",
-{headers}
-);
-
-const obs=await latest.json();
-
-const p=obs.properties;
-
-if(p.relativeHumidity && p.relativeHumidity.value!=null){
-
-document.getElementById("humidity").textContent=
-`${Math.round(p.relativeHumidity.value)}%`;
-
-}
-
-}catch(e){
-
-console.log("Observation data unavailable.");
-
-}
-
-}
-
-/* Sunrise / Sunset (simple calculation placeholder) */
-
-const now=new Date();
-
-document.getElementById("sunrise").textContent=
-"6:30 AM";
-
-document.getElementById("sunset").textContent=
-"6:48 PM";
-
-/* Refresh Button */
-
-const refresh=document.createElement("button");
-
-refresh.className=
-"fixed bottom-6 right-6 glass px-6 py-4 font-bold hover:scale-105 transition";
-
-refresh.innerHTML="🔄 Refresh";
-
-refresh.onclick=()=>{
-
-document.getElementById("dashboard")
-.classList.add("hidden");
-
-document.getElementById("loading")
-.style.display="block";
-
-loadWeather();
-loadStationData();
-
-};
-
-document.body.appendChild(refresh);
-
-/* Load Everything */
-
-loadWeather();
-
-loadStationData();
-</script>
-
-</body>
-</html>
-<!-- Premium Weather Panel -->
-<div class="glass p-6 mt-6">
-    <h2 class="text-2xl font-bold neon mb-5">Extra Weather Data</h2>
-
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
-
-        <div class="glass p-4">
-            <div class="text-gray-400 text-sm">🌡️ Dew Point</div>
-            <div id="dewPoint" class="text-2xl font-bold">--°</div>
-        </div>
-
-        <div class="glass p-4">
-            <div class="text-gray-400 text-sm">👁️ Visibility</div>
-            <div id="visibility" class="text-2xl font-bold">-- mi</div>
-        </div>
-
-        <div class="glass p-4">
-            <div class="text-gray-400 text-sm">🧭 Pressure</div>
-            <div id="pressure" class="text-2xl font-bold">--</div>
-        </div>
-
-        <div class="glass p-4">
-            <div class="text-gray-400 text-sm">💨 Wind Gust</div>
-            <div id="gust" class="text-2xl font-bold">-- mph</div>
-        </div>
-
-        <div class="glass p-4">
-            <div class="text-gray-400 text-sm">📍 NOAA Station</div>
-            <div id="stationName" class="text-lg font-semibold">Loading...</div>
-        </div>
-
-        <div class="glass p-4">
-            <div class="text-gray-400 text-sm">🛰️ Observation</div>
-            <div id="obsTime" class="text-lg font-semibold">--</div>
-        </div>
-
-        <div class="glass p-4">
-            <div class="text-gray-400 text-sm">🕒 Local Time</div>
-            <div id="clock" class="text-2xl font-bold"></div>
-        </div>
-
-        <div class="glass p-4">
-            <div class="text-gray-400 text-sm">📅 Date</div>
-            <div id="todayDate" class="text-lg font-semibold"></div>
-        </div>
-
-    </div>
-</div>function updateClock(){
-
-const now=new Date();
-
-clock.textContent=now.toLocaleTimeString();
-
-todayDate.textContent=now.toLocaleDateString(undefined,{
-weekday:"long",
-month:"long",
-day:"numeric",
-year:"numeric"
-});
-
-}
-
-setInterval(updateClock,1000);
-
-updateClock();
-
-document.getElementById("dewPoint").textContent =
-p.dewpoint?.value ? `${Math.round((p.dewpoint.value*9/5)+32)}°` : "--";
-
-document.getElementById("visibility").textContent =
-p.visibility?.value ? `${(p.visibility.value/1609).toFixed(1)} mi` : "--";
-
-document.getElementById("pressure").textContent =
-p.barometricPressure?.value ? `${Math.round(p.barometricPressure.value/100)} mb` : "--";
-
-document.getElementById("gust").textContent =
-p.windGust?.value ? `${Math.round(p.windGust.value*2.237)} mph` : "--";
-
-document.getElementById("stationName").textContent =
-obs.properties.station.split("/").pop();
-
-document.getElementById("obsTime").textContent =
-new Date(obs.properties.timestamp).toLocaleTimeString();
-</body>
-</html>
-<!-- Floating Weather Effects -->
-<div id="stars"></div>
-<div id="rain"></div>
-
-<!-- Weather Chart -->
-<div class="glass p-8 mt-8">
-
-<h2 class="text-2xl font-bold neon mb-5">
-24 Hour Temperature
-</h2>
-
-<canvas id="tempChart" height="120"></canvas>
-
-</div>
-
-<!-- Radar Button -->
-
-<div class="glass p-6 mt-8 flex flex-wrap gap-4">
-
-<button onclick="window.open('https://radar.weather.gov')"
-class="bg-cyan-500 hover:bg-cyan-400 px-6 py-3 rounded-xl font-bold">
-
-🛰️ NOAA Radar
-
-</button>
-
-<button onclick="toggleTheme()"
-class="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold">
-
-🌙 Toggle Theme
-
-</button>
-
-<button onclick="navigator.share?.({
-title:'Sanford Weather',
-text:'Check out my live weather app!',
-url:location.href
-})"
-class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-bold">
-
-📤 Share
-
-</button>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</script>
-/* Temperature Graph */
-
 function makeChart(){
 
 const ctx=document.getElementById("tempChart");
 
-if(!ctx)return;
+if(chart) chart.destroy();
 
-new Chart(ctx,{
+chart=new Chart(ctx,{
 
 type:"line",
 
@@ -998,17 +652,19 @@ data:hourlyData.properties.periods
 
 borderColor:"#38bdf8",
 
-backgroundColor:"rgba(56,189,248,.15)",
+backgroundColor:"rgba(56,189,248,.2)",
 
 fill:true,
 
-tension:.45
+tension:.4
 
 }]
 
 },
 
 options:{
+
+responsive:true,
 
 plugins:{
 legend:{
@@ -1040,11 +696,51 @@ color:"white"
 
 }
 
-/* Call after weather loads */
+function getEmoji(text){
 
-setTimeout(makeChart,1000);
+text=text.toLowerCase();
 
-/* Live Theme */
+if(text.includes("clear")) return "☀️";
+if(text.includes("sun")) return "☀️";
+if(text.includes("cloud")) return "☁️";
+if(text.includes("partly")) return "⛅";
+if(text.includes("rain")) return "🌧️";
+if(text.includes("storm")) return "⛈️";
+if(text.includes("thunder")) return "⛈️";
+if(text.includes("snow")) return "❄️";
+if(text.includes("fog")) return "🌫️";
+if(text.includes("wind")) return "💨";
+
+return "🌤️";
+
+}
+
+// Part 4 continues here...<!-- Floating Controls -->
+<div class="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+
+<button onclick="loadWeather()"
+class="glass px-5 py-3 font-bold">
+🔄 Refresh
+</button>
+
+<button onclick="toggleTheme()"
+class="glass px-5 py-3 font-bold">
+🌙 Theme
+</button>
+
+<button onclick="window.open('https://radar.weather.gov')"
+class="glass px-5 py-3 font-bold">
+🛰️ Radar
+</button>
+
+<button onclick="shareWeather()"
+class="glass px-5 py-3 font-bold">
+📤 Share
+</button>
+
+</div>
+
+<script>
 
 function toggleTheme(){
 
@@ -1052,67 +748,72 @@ document.body.classList.toggle("invert");
 
 }
 
-/* Stars */
+function shareWeather(){
 
-const stars=document.getElementById("stars");
+if(navigator.share){
+
+navigator.share({
+
+title:"Sanford Weather Ultra",
+
+text:"Live weather for Sanford, Florida",
+
+url:location.href
+
+});
+
+}else{
+
+alert("Sharing isn't supported on this browser.");
+
+}
+
+}
+
+/* Stars */
 
 for(let i=0;i<120;i++){
 
-const s=document.createElement("div");
+const star=document.createElement("div");
 
-s.style.position="fixed";
+star.style.position="fixed";
+star.style.left=Math.random()*100+"vw";
+star.style.top=Math.random()*100+"vh";
+star.style.width="2px";
+star.style.height="2px";
+star.style.background="white";
+star.style.opacity=Math.random();
+star.style.boxShadow="0 0 8px white";
+star.style.pointerEvents="none";
+star.style.zIndex="-1";
 
-s.style.width="2px";
-
-s.style.height="2px";
-
-s.style.background="white";
-
-s.style.left=Math.random()*100+"vw";
-
-s.style.top=Math.random()*100+"vh";
-
-s.style.opacity=Math.random();
-
-s.style.pointerEvents="none";
-
-s.style.boxShadow="0 0 8px white";
-
-stars.appendChild(s);
+document.body.appendChild(star);
 
 }
 
 /* Rain */
 
-const rain=document.getElementById("rain");
+const rainStyle=document.createElement("style");
 
-for(let i=0;i<140;i++){
+rainStyle.innerHTML=`
 
-const d=document.createElement("div");
+.rain{
 
-d.style.position="fixed";
+position:fixed;
 
-d.style.width="2px";
+width:2px;
 
-d.style.height="18px";
+height:18px;
 
-d.style.background="rgba(120,220,255,.55)";
+background:rgba(120,220,255,.45);
 
-d.style.left=Math.random()*100+"vw";
+animation:fall linear infinite;
 
-d.style.top=Math.random()*-100+"vh";
+pointer-events:none;
 
-d.style.animation=`fall ${1+Math.random()*2}s linear infinite`;
-
-d.style.animationDelay=Math.random()*2+"s";
-
-rain.appendChild(d);
+z-index:-1;
 
 }
-
-const style=document.createElement("style");
-
-style.innerHTML=`
 
 @keyframes fall{
 
@@ -1124,7 +825,7 @@ opacity:0;
 
 }
 
-20%{
+15%{
 
 opacity:1;
 
@@ -1132,7 +833,7 @@ opacity:1;
 
 100%{
 
-transform:translateY(120vh);
+transform:translateY(110vh);
 
 opacity:0;
 
@@ -1140,21 +841,55 @@ opacity:0;
 
 }
 
-.glass{
-
-transition:.35s;
-
-}
-
-.glass:hover{
-
-transform:translateY(-6px) scale(1.02);
-
-box-shadow:0 0 35px #38bdf8;
-
-}
-
 `;
 
-document.head.appendChild(style);
-   </script>
+document.head.appendChild(rainStyle);
+
+function createRain(){
+
+for(let i=0;i<140;i++){
+
+const drop=document.createElement("div");
+
+drop.className="rain";
+
+drop.style.left=Math.random()*100+"vw";
+
+drop.style.top=Math.random()*-100+"vh";
+
+drop.style.animationDuration=
+(1+Math.random()*1.5)+"s";
+
+drop.style.animationDelay=
+Math.random()*2+"s";
+
+document.body.appendChild(drop);
+
+}
+
+}
+
+const weatherText=
+hourlyData.properties.periods[0]
+.shortForecast
+.toLowerCase();
+
+if(weatherText.includes("rain")||
+weatherText.includes("storm")){
+
+createRain();
+
+}
+
+/* Auto Refresh */
+
+setInterval(loadWeather,300000);
+
+/* Initial Load */
+
+loadWeather();
+
+</script>
+
+</body>
+</html>
