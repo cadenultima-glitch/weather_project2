@@ -834,3 +834,86 @@ loadStationData();
 
 </body>
 </html>
+<!-- Premium Weather Panel -->
+<div class="glass p-6 mt-6">
+    <h2 class="text-2xl font-bold neon mb-5">Extra Weather Data</h2>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+
+        <div class="glass p-4">
+            <div class="text-gray-400 text-sm">🌡️ Dew Point</div>
+            <div id="dewPoint" class="text-2xl font-bold">--°</div>
+        </div>
+
+        <div class="glass p-4">
+            <div class="text-gray-400 text-sm">👁️ Visibility</div>
+            <div id="visibility" class="text-2xl font-bold">-- mi</div>
+        </div>
+
+        <div class="glass p-4">
+            <div class="text-gray-400 text-sm">🧭 Pressure</div>
+            <div id="pressure" class="text-2xl font-bold">--</div>
+        </div>
+
+        <div class="glass p-4">
+            <div class="text-gray-400 text-sm">💨 Wind Gust</div>
+            <div id="gust" class="text-2xl font-bold">-- mph</div>
+        </div>
+
+        <div class="glass p-4">
+            <div class="text-gray-400 text-sm">📍 NOAA Station</div>
+            <div id="stationName" class="text-lg font-semibold">Loading...</div>
+        </div>
+
+        <div class="glass p-4">
+            <div class="text-gray-400 text-sm">🛰️ Observation</div>
+            <div id="obsTime" class="text-lg font-semibold">--</div>
+        </div>
+
+        <div class="glass p-4">
+            <div class="text-gray-400 text-sm">🕒 Local Time</div>
+            <div id="clock" class="text-2xl font-bold"></div>
+        </div>
+
+        <div class="glass p-4">
+            <div class="text-gray-400 text-sm">📅 Date</div>
+            <div id="todayDate" class="text-lg font-semibold"></div>
+        </div>
+
+    </div>
+</div>function updateClock(){
+
+const now=new Date();
+
+clock.textContent=now.toLocaleTimeString();
+
+todayDate.textContent=now.toLocaleDateString(undefined,{
+weekday:"long",
+month:"long",
+day:"numeric",
+year:"numeric"
+});
+
+}
+
+setInterval(updateClock,1000);
+
+updateClock();
+
+document.getElementById("dewPoint").textContent =
+p.dewpoint?.value ? `${Math.round((p.dewpoint.value*9/5)+32)}°` : "--";
+
+document.getElementById("visibility").textContent =
+p.visibility?.value ? `${(p.visibility.value/1609).toFixed(1)} mi` : "--";
+
+document.getElementById("pressure").textContent =
+p.barometricPressure?.value ? `${Math.round(p.barometricPressure.value/100)} mb` : "--";
+
+document.getElementById("gust").textContent =
+p.windGust?.value ? `${Math.round(p.windGust.value*2.237)} mph` : "--";
+
+document.getElementById("stationName").textContent =
+obs.properties.station.split("/").pop();
+
+document.getElementById("obsTime").textContent =
+new Date(obs.properties.timestamp).toLocaleTimeString();
